@@ -1,49 +1,83 @@
-#include <netinet/in.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/socket.h> 
-#include <sys/types.h>
+#include <ctype.h>
+
+#include <netinet/in.h>
 #include <arpa/inet.h>
-#define PORT 8000
-  
-int main(int argc, char const* argv[]) {
-    int longitud;
-    char mensaje[255];
+#include <netdb.h>
 
-    // SERVIDOR
-    struct sockaddr_in servidor;
+char buffer[128];
+struct sockaddr_in servidor;
+
+// valida si los argumentos son validos
+void validate_argumentos(int num){
+    if (num != 3){
+		printf("ups! la cantidad de argumentos es invalida\n");
+		exit(-1);
+	}
+}
+
+// guarda los datos del servidor
+void datos_servidor(char* ip, char* puer) {
     servidor.sin_family = AF_INET;
-    servidor.sin_port = htons(PORT);    // numero de puerto
-    servidor.sin_addr.s_addr = INADDR_ANY;  // numero internet
+   	servidor.sin_port = htons(puer);
+    servidor.sin_addr.s_addr = inet_addr(ip);
+}
 
-    // SOCKET
-    int sock = socket(AF_INET, SOCK_STREAM, 0); // creo socket
-  
-    // CONEXION
-    int connectStatus = connect(sock, (struct sockaddr*)&servidor, sizeof(servidor));
-    if (connectStatus == -1) { // catch
-        printf("Ups! Hubo un error conectando cliente y servidor\n\n");
-    } else {
-        // BUCLE
-        printf("Desea finalizar? Ingrese la letra Z: \n");
-        do {                                        // escribe y lee en serv hasta que finalice el usuario
-            fgets(mensaje, sizeof(mensaje), stdin);
-            
-            write(sock, mensaje, strlen(mensaje));  // escribir en servidor
-            
-            longitud = read(sock, mensaje, sizeof(mensaje));    // leer en servidor
-            write(STDOUT_FILENO, mensaje, longitud);
+// efectiviza la conexion
+void conexion(int sd) {
+    if(sd == -1) {                          
+		printf("ups! error en la conexion\n");
+		exit(-1);
+	} else {
+        int conecta = connect(sd,(struct sockaddr*)&servidor,sizeof(servidor));
 
-            if(mensaje[0] == 'Z'){
-                break;
-            }
-        } while (1);
+        if(conecta == -1){
+            printf("ups! error de conexion\n");
+            exit(-1);
+        } else {
+            printf("conectado!!\n");		
+        }
     }
-    
-    // CIERRE
-    close(sock);
+}
 
-    return 0;
+void lee(int sd) {
+    int lectura = read(sd, buffer, sizeof(buffer));
+
+    if(lectura == -1) {
+        printf("ups! no se pudo leer\n");
+        exit(-1);
+    }
+}
+
+void imprime() {
+    printf("dato del servidor: %s\n\n", buffer);
+}
+
+int main(int argc, char *argv[]){
+    char ip[32];                                // ip
+    int puerto = atoi(argv[2]);                 // puerto
+
+	// cantidad de argumentos son validos?
+    validate_argumentos(argc);
+
+    // guardo la ip y puerto
+    datos_servidor(argv[1], puerto);
+
+	// hago la conexion
+    int sd = socket(AF_INET, SOCK_STREAM, 0);   // socket
+    conexion(sd);
+
+    // lectura y copia del dato
+    lee(sd);
+
+    // imprimo el dato
+    imprime();
+
+    // se desconecta
+	close(sd);          
+
+	return 0;
 }
