@@ -12,7 +12,7 @@ char buffer[128];
 struct sockaddr_in servidor;
 
 // valida si los argumentos son validos
-void validate_argumentos(int num){
+void valida_argumentos(int num){
     if (num != 3){
 		printf("ups! la cantidad de argumentos es invalida\n");
 		exit(-1);
@@ -20,7 +20,7 @@ void validate_argumentos(int num){
 }
 
 // guarda los datos del servidor
-void datos_servidor(char* ip, char* puer) {
+void guardo_servidor(char* ip, char* puer) {
     servidor.sin_family = AF_INET;
    	servidor.sin_port = htons(puer);
     servidor.sin_addr.s_addr = inet_addr(ip);
@@ -43,7 +43,8 @@ void conexion(int sd) {
     }
 }
 
-void lee(int sd) {
+// lee el mensaje del servidor
+void lee_escribe(int sd) {
     int lectura = read(sd, buffer, sizeof(buffer));
 
     if(lectura == -1) {
@@ -52,6 +53,7 @@ void lee(int sd) {
     }
 }
 
+// imprime datos del buffer
 void imprime() {
     printf("dato del servidor: %s\n\n", buffer);
 }
@@ -61,19 +63,19 @@ int main(int argc, char *argv[]){
     int puerto = atoi(argv[2]);                 // puerto
 
 	// cantidad de argumentos son validos?
-    validate_argumentos(argc);
+    valida_argumentos(argc);
 
     // guardo la ip y puerto
-    datos_servidor(argv[1], puerto);
+    guardo_servidor(argv[1], puerto);
 
 	// hago la conexion
     int sd = socket(AF_INET, SOCK_STREAM, 0);   // socket
     conexion(sd);
 
-    // lectura y copia del dato
-    lee(sd);
+    // lectura y copia del dato en buffer
+    lee_escribe(sd);
 
-    // imprimo el dato
+    // imprimo el dato en buffer
     imprime();
 
     // se desconecta
