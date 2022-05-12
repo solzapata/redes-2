@@ -20,9 +20,9 @@ void valida_argumentos(int num){
 }
 
 // guarda los datos del servidor
-void guardo_servidor(char* ip, char* puer) {
+void guardo_servidor(char* ip, char* puerto) {
     servidor.sin_family = AF_INET;
-   	servidor.sin_port = htons(puer);
+   	servidor.sin_port = htons(puerto);
     servidor.sin_addr.s_addr = inet_addr(ip);
 }
 
